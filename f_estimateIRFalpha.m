@@ -1,23 +1,34 @@
-function [IRF,params,predicted] = f_estimateIRFalpha(jRGECO,HbT,fs,l,brain_mask,ds)
+function [IRF,params,predicted] = f_estimateIRFalpha(rfp_HD,HbT,fs,l,brain_mask,ds)
+% used to estimate the Impulse Response Function (IRF) between two signals
+% Inputs:
+%   rfp_HD - Ca2+ mesoscopic video
+%   HbT - HbT mesoscopic video
+%   fs - acquisition framerate
+%   l - length of desired IRF
+%   brain_mask - mask to define cortical exposure (makes calculation
+%   ds - downsampling kernel size
+% Outputs:
+%   IRF - the IRF vector (length of l)
+%   params - IRF parameters [t0,tau1,tau2,A,B]
+%   predicted - convolution of rfp_HD with IRF (predicted HbT)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Initialize design matrices
-
-
-jRGECO = f_downsample(jRGECO,ds);
+% Initialize design matrices
+rfp_HD = f_downsample(rfp_HD,ds);
 HbT = f_downsample(HbT,ds);
 brain_mask = f_downsample(brain_mask,ds);
 
-dim = size(jRGECO);
+dim = size(rfp_HD);
 N = sum(brain_mask,[1,2],'omitnan');
 
 N_IRF = l*fs;
 
-jRGECO = jRGECO.*brain_mask;
+rfp_HD = rfp_HD.*brain_mask;
 HbT = HbT.*brain_mask;
-jRGECO = reshape(jRGECO,dim(1)*dim(2),dim(3));
+rfp_HD = reshape(rfp_HD,dim(1)*dim(2),dim(3));
 HbT = reshape(HbT,dim(1)*dim(2),dim(3));
-nanIdx = isnan(jRGECO(:,1));
-jRGECO = jRGECO(~nanIdx,:)';
+nanIdx = isnan(rfp_HD(:,1));
+rfp_HD = rfp_HD(~nanIdx,:)';
 HbT = HbT(~nanIdx,:)';
 HbT = f_bpf(HbT,[0 0.5],10);
 
@@ -25,12 +36,10 @@ design1 = zeros(dim(3),N,N_IRF);
 design2 = HbT(:);
 
 for lIdx = 1:N_IRF
-    design1(lIdx:end,:,lIdx) = jRGECO(1:end-lIdx+1,:);
+    design1(lIdx:end,:,lIdx) = rfp_HD(1:end-lIdx+1,:);
 end
 
 design1 = reshape(design1,[],N_IRF);
-
-%%
 
 t0 = 0.1774;
 tau1 = 0.4289;
@@ -46,7 +55,7 @@ params(1) = abs(params(1));
 
 IRF = f_alpha_IRF(params(1),params(2),params(3),params(4),params(5),fs,l);
 
-%% calc predicted HbT
+% calc predicted HbT
 predicted = sum(design1.*IRF',2);
 predicted = reshape(predicted,dim(3),[]);
 tmp = NaN(dim(1)*dim(2),dim(3));
@@ -84,5 +93,5 @@ predicted = reshape(tmp,dim(1),dim(2),[]);
         IRF = A*D + B*C;
     
     end
-
 end
+

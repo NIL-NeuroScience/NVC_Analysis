@@ -1,7 +1,11 @@
 function downsampled = f_downsample(sig,bin)
-
-%%
-% sig = rfp_HD;bin = 3;
+% used to spatially downsample images/videos
+% Inputs:
+%   sig - image/video to downsample
+%   bin - downsampling kernel size
+% Outputs:
+%   downsampled - downsampled image/video
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if bin == 1
     downsampled = sig;
@@ -18,5 +22,3 @@ else
         end
     end
 end
-
-%%

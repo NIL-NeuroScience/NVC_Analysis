@@ -1,6 +1,20 @@
 function [perf,IRF,LS] = f_2xDeconvolve(signal,reg1,reg2,win,fs,brain_mask,ds_factor)
+% used to estimate the Impulse Response Function (IRF) between two signals
+% Inputs:
+%   signal - signal to deconvolve from (3D video)
+%   reg1 - signal to deconvolve with (3D video)
+%   reg2 - second signal to deconvolve with (3D video)
+%   win - IRF bounds [t1 t2] (s)
+%   fs - acquisition frame rate
+%   brain_mask - mask to define cortical exposure (makes calculation
+%   ds_factor - downsampling kernel size
+% Outputs:
+%   perf - correlation between predicted and recorded signal
+%   IRF - the IRF vector (length of fs*range(fs),2)
+%   LS - pixel-by-pixel scaling coefficients for reg1 and reg2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% process inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% process inputs 
 
 ds.signal = f_downsample(signal,ds_factor);
 ds.reg1 = f_downsample(reg1,ds_factor);

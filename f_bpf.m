@@ -1,4 +1,13 @@
 function filt = f_bpf(sig,fr,fs,dim)
+% used to band-pass filter a signal
+% Inputs:
+%   sig - signal to filter
+%   fr - frequency window to filter between [f1 f2]
+%   fs - acquisition sampling rate
+%   dim - matrix dimension to operate on (currently supports dim = 1 or 3)
+% Outputs:
+%   filt - filtered signal
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 idx = fr == [0 fs/2];
 idx = ~idx;
