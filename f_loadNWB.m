@@ -49,6 +49,7 @@ end
 brain_mask = masks(:,:,1);
 brain_mask(brain_mask==0) = NaN;
 parcellation = masks(:,:,2:end);
+parcellation(parcellation==) = NaN;
 
 %% extract behavioral readouts 
 behavior = nwb.processing.get('behavior').nwbdatainterface.get('BehavioralTimeSeries');
