@@ -8,13 +8,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rfp_HD - hemodynamic corrected Ca2+ fluorescence data
 % gfp_HD - hemodynamic corrected GRAB fluorescence data
-% HbT - total hemoglobin fluctuations
 % HbO - oxygenated hemoglobin fluctuations
 % HbR - deoxygenated hemoglobin fluctuations
 % brain_mask - mask used to define cortical exposure
 % parcellation - allen atlas parcellation structure
 % fs - acquisition frequency (10 Hz)
 % pupil - pupil diameter time course
+
+HbT = HbO + HbR;
 
 %% analysis settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
