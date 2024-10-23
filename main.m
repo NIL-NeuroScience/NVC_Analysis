@@ -15,7 +15,7 @@
 % fs - acquisition frequency (10 Hz)
 % pupil - pupil diameter time course
 
-HbT = HbO + HbR;
+HbT = HbO+HbR;
 
 %% analysis settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -95,6 +95,70 @@ IRF1.pupil = IRF1.pupil(IRF1.arousal_idx)';
 IRF1.GRAB = movmean(gfp_HD.*brain_mask,aSet.IRF1.corrGram_win*fs,3);
 IRF1.GRAB = IRF1.GRAB(:,:,IRF1.arousal_idx);
 
+%% plot figures for Figure 1
+
+imAlpha = brain_mask;
+imAlpha(isnan(imAlpha)) = 0;
+
+% figure 1C
+f = figure; 
+plot(0:0.1:6.9,IRF1.IRF);
+xlim([0 6.9]);
+xlabel('Time (s)');
+ylabel('a.u.');
+title('Global IRF');
+box off;
+
+f = figure;
+imagesc(IRF1.perf_full,'AlphaData',imAlpha);
+colormap jet;
+caxis([0 1]);
+c = colorbar;
+c.Label.String = 'r';
+title('IRF Performance - Global');
+axis off image;
+
+% figure 1D
+f = figure; 
+plot(0:0.1:6.9,IRF1.SM.IRF);
+xlim([0 6.9]);
+xlabel('Time (s)');
+ylabel('a.u.');
+title('sm IRF');
+box off;
+
+f = figure;
+imagesc(IRF1.SM.perf_full,'AlphaData',imAlpha);
+colormap jet;
+caxis([0 1]);
+c = colorbar;
+c.Label.String = 'r';
+title('IRF Performance - SM');
+axis off image;
+
+% figure 1F
+SM_IRF_perf = squeeze(mean(parcellation(:,:,3).*IRF1.SM.corrGram_full,[1 2],'omitnan'));
+f = figure;hold on;
+scatter(IRF1.pupil,SM_IRF_perf,50,'filled','MarkerFaceAlpha',0.2,'MarkerFaceColor',[0.7 0 0.7]);
+mdl = fitlm(IRF1.pupil,SM_IRF_perf);
+mdl = table2array(mdl.Coefficients);
+plot([0.15 0.4],[0.15 0.4]*mdl(2,1)+mdl(1,1),'Color',[0.7 0 0.7],'LineWidth',2);
+xlim([0.15 0.4]);
+ylim([-1 1]);
+xlabel('Pupil Diameter');
+ylabel('IRF Performance');
+
+NE = squeeze(mean(brain_mask.*IRF1.GRAB,[1 2],'omitnan'));
+f = figure;hold on;
+scatter(NE,SM_IRF_perf,50,'filled','MarkerFaceAlpha',0.2,'MarkerFaceColor',[0.4471 0.7529 0.0314]);
+mdl = fitlm(NE,SM_IRF_perf);
+mdl = table2array(mdl.Coefficients);
+plot([-4 4],[-4 4]*mdl(2,1)+mdl(1,1),'Color',[0.4471 0.7529 0.0314],'LineWidth',2);
+xlim([-4 4]);
+ylim([-1 1]);
+xlabel('Norepinephrine (\DeltaF/F)');
+ylabel('IRF Performance');
+
 %% Figure 2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % normalized linear regression model
@@ -133,6 +197,103 @@ IRF2 = struct;
 [IRF2.perf,IRF2.IRF,IRF2.LS] = f_2xDeconvolve(HbT./std(HbT,0,3),rfp_HD./std(rfp_HD,0,3),gfp_HD./std(gfp_HD,0,3),aSet.IRF2.kernel,fs,brain_mask,4);
 [IRF2.HbO.perf,IRF2.HbO.IRF,IRF2.HbO.LS] = f_2xDeconvolve(HbO./std(HbO,0,3),rfp_HD./std(rfp_HD,0,3),gfp_HD./std(gfp_HD,0,3),aSet.IRF2.kernel,fs,brain_mask,4);
 [IRF2.HbR.perf,IRF2.HbR.IRF,IRF2.HbR.LS] = f_2xDeconvolve(HbR./std(HbR,0,3),rfp_HD./std(rfp_HD,0,3),gfp_HD./std(gfp_HD,0,3),aSet.IRF2.kernel,fs,brain_mask,4);
+
+%% plot figures for Figure 2
+
+% figure 2B
+f = figure;
+imagesc(LR.LS_full(:,:,1),'AlphaData',imAlpha);
+colormap cmpbbr;
+caxis(0.65*[-1 1]);
+c = colorbar;
+title('Ca^2^+ LR Coefficient');
+axis off image;
+
+f = figure;
+imagesc(LR.LS_full(:,:,2),'AlphaData',imAlpha);
+colormap cmpbbr;
+caxis(0.9*[-1 1]);
+c = colorbar;
+title('NE LR Coefficient');
+axis off image;
+
+% figure 2C
+f = figure;
+imagesc(LR.perf_full,'AlphaData',imAlpha);
+colormap jet;
+caxis([0 1]);
+c = colorbar;
+c.Label.String = 'r';
+title('Linear Regression Model');
+axis off image;
+
+% figure 2D
+f = figure;hold on;
+scatter(IRF1.perf_full(1:10:end),LR.perf_full(1:10:end),50,'filled','MarkerFaceAlpha',0.05,'MarkerFaceColor',[230 163 0]/255);
+plot([0 1],[0 1],'-k');
+xlim([0 1]);
+ylim([0 1]);
+ylabel('LR Model (r)');
+xlabel('IRF Performance');
+
+% figure 2E
+f = figure;hold on;
+A = LR.LS_full(:,:,1);
+scatter(IRF1.perf_full(1:10:end),A(1:10:end),50,'filled','MarkerFaceAlpha',0.05,'MarkerFaceColor',[0.8196 0.0784 0.0941]);
+mdl = fitlm(IRF1.perf_full(1:10:end),A(1:10:end));
+mdl = table2array(mdl.Coefficients);
+plot([-0.5 0.8],[-0.5 0.8]*mdl(2,1)+mdl(1,1),'Color',[0.8196 0.0784 0.0941],'LineWidth',2);
+xlim([-0.5 0.8]);
+ylim([0 1]);
+xlabel('IRF Performance');
+ylabel('Ca^2^+ Coefficient (A)');
+
+f = figure;hold on;
+B = LR.LS_full(:,:,2);
+scatter(IRF1.perf_full(1:10:end),B(1:10:end),50,'filled','MarkerFaceAlpha',0.05,'MarkerFaceColor',[0.4471 0.7529 0.0314]);
+mdl = fitlm(IRF1.perf_full(1:10:end),B(1:10:end));
+mdl = table2array(mdl.Coefficients);
+plot([-0.5 0.8],[-0.5 0.8]*mdl(2,1)+mdl(1,1),'Color',[0.4471 0.7529 0.0314],'LineWidth',2);
+xlim([-0.5 0.8]);
+ylim([-1.5 0]);
+xlabel('IRF Performance');
+ylabel('NE Coefficient (A)');
+
+% figure 2F
+f = figure;
+imagesc(IRF2.LS(:,:,1),'AlphaData',imAlpha);
+colormap cmpbbr;
+caxis(1.3*[-1 1]);
+c = colorbar;
+title('Ca^2^+ 2xIRF Coefficient');
+axis off image;
+
+f = figure;
+imagesc(-IRF2.LS(:,:,2),'AlphaData',imAlpha);
+colormap cmpbbr;
+caxis(2*[-1 1]);
+c = colorbar;
+title('NE 2xIRF Coefficient');
+axis off image;
+
+% figure 2G
+f = figure;
+imagesc(IRF2.perf,'AlphaData',imAlpha);
+colormap jet;
+caxis([0 1]);
+c = colorbar;
+c.Label.String = 'r';
+title('Double IRF Model');
+axis off image;
+
+% figure 2H
+f = figure;hold on;
+scatter(IRF1.perf_full(1:10:end),IRF2.perf(1:10:end),50,'filled','MarkerFaceAlpha',0.05,'MarkerFaceColor',[206 35 136]/255);
+plot([0 1],[0 1],'-k');
+xlim([0 1]);
+ylim([0 1]);
+ylabel('2x IRF Model (r)');
+xlabel('IRF Performance');
 
 %% Figure 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -231,3 +392,49 @@ for y = 1:n
 end
 FC_data.allen = allen;
 
+%% plot figures for Figure 3
+
+% figure 3B
+f = figure;hold on;
+plot(15:3:582,squeeze(FC_data.allen.fcGram.Ca(2,12,:)),'Color',[0.819607843137255 0.0784313725490196 0.0941176470588235]);
+plot(15:3:582,squeeze(FC_data.allen.fcGram.HbT(2,12,:)),'Color',[0.203921568627451 0.215686274509804 0.592156862745098]);
+xlim([15 582]);
+xlabel('Time (s)');
+ylabel('r');
+legend('r(Ca_M_O_s,Ca_V_I_S_p)','r(HbT_M_O_s,HbT_V_I_S_p)')
+
+% figure 3C
+f = figure;
+plot(15:3:582,FC_data.corr.all,'Color',[0.870588235294118,0.576470588235294,0.019607843137255]);
+xlim([15 582]);
+xlabel('Time (s)');
+ylabel('r');
+
+% figure 3D
+f = figure;hold on;
+scatter(FC_data.NE,FC_data.corr.all,50,'filled','MarkerFaceAlpha',0.2,'MarkerFaceColor',[0.819607843137255 0.0784313725490196 0.0941176470588235]);
+mdl = fitlm(FC_data.NE,FC_data.corr.all);
+mdl = table2array(mdl.Coefficients);
+plot([-4 4],[-4 4]*mdl(2,1)+mdl(1,1),'Color',[0.819607843137255 0.0784313725490196 0.0941176470588235],'LineWidth',2);
+xlim([-4 4]);
+ylim([0.2 1]);
+xlabel('Norepinephrine (\DeltaF/F)');
+ylabel('Correlation (R)');
+
+% figure 3E
+f = figure;
+imagesc(FC_data.allen.NE.Ca);
+colormap cmpbbr;
+axis off image;
+caxis(0.1*[-1 1]);
+c = colorbar;
+c.Label.String = 'R / \DeltaF/F (NE)';
+
+% figure 3F
+f = figure;
+imagesc(FC_data.allen.NE.HbT);
+colormap cmpbbr;
+axis off image;
+caxis(0.1*[-1 1]);
+c = colorbar;
+c.Label.String = 'R / \DeltaF/F (NE)';
